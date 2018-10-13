@@ -4,10 +4,27 @@ const _ = require('lodash');
 const router = express.Router();
 const authGuard = require("../middleware/auth.middleware");
 const {User, validate} = require("../models/user");
+const asyncMiddleware = require("../middleware/async");
 
-router.get('/', async (req, res) => {
+// asyncMiddleware function is used 
+// to avoid repeatitve try-catch bolck to handle UnhandledPromiseRejection
+// router.get('/', asyncMiddleware(async (req, res) => {  
+//   const users = await User.find().sort('name');
+//   res.send(users);
+// }));
+
+// Better approach
+// instead we can use express-async-errors package
+
+router.get('/', async (req, res) => {   
   const users = await User.find().sort('name');
-  res.send(users);
+  
+  res.send(
+    users.map(u => ({
+      name: u.name,
+      email: u.email
+    }))
+  );
 });
 
 router.get('/me', authGuard, async(req, res) => {
